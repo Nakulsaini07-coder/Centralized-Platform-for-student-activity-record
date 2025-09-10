@@ -1,211 +1,335 @@
-import React from "react";
-import {
-  User,
-  BookOpen,
-  Activity,
-  BarChart3,
-  LogOut,
-  TrendingUp,
-  Settings,
-  GraduationCap,
-  Menu,
-  X,
-} from "lucide-react";
-import { useAuth } from "../contexts/AuthContext";
+import React, { useState, useEffect } from 'react';
+import { Plus, Calendar, FileText, Tag, Clock, CheckCircle, XCircle, Trash2, BookOpen, Award, Heart, Filter, Search } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { Activity } from '../types';
+import { getActivities, saveActivities, generateId } from '../utils/storage';
 
-interface LayoutProps {
-  children: React.ReactNode;
-  currentPage: string;
-  onPageChange: (page: string) => void;
-}
+const ActivityManager: React.FC = () => {
+  const { user } = useAuth();
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [filteredActivities, setFilteredActivities] = useState<Activity[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [showForm, setShowForm] = useState(false);
+  const [formData, setFormData] = useState({
+    type: 'academic' as 'academic' | 'extracurricular' | 'volunteering',
+    title: '',
+    description: '',
+    date: new Date().toISOString().split('T')[0],
+    fileName: ''
+  });
 
-const Layout: React.FC<LayoutProps> = ({
-  children,
-  currentPage,
-  onPageChange,
-}) => {
-  const { user, logout } = useAuth();
-  const [sidebarOpen, setSidebarOpen] = React.useState(false);
+  useEffect(() => {
+    loadActivities();
+  }, [user]);
 
-  const studentPages = [
-    { id: "dashboard", label: "Dashboard", icon: BarChart3 },
-    { id: "profile", label: "Profile", icon: User },
-    { id: "activities", label: "Activities", icon: Activity },
-    { id: "portfolio", label: "Portfolio", icon: BookOpen },
-  ];
+  useEffect(() => {
+    filterActivities();
+  }, [activities, searchTerm, statusFilter, typeFilter]);
 
-  const facultyPages = [
-    { id: "dashboard", label: "Dashboard", icon: BarChart3 },
-    { id: "approvals", label: "Approvals", icon: Activity },
-    { id: "analytics", label: "Analytics", icon: TrendingUp },
-    { id: "integrations", label: "Integrations", icon: Settings },
-  ];
+  const loadActivities = () => {
+    const allActivities = getActivities();
+    const userActivities = allActivities.filter(activity => activity.studentId === user?.id);
+    setActivities(userActivities);
+  };
 
-  const pages = user?.role === "student" ? studentPages : facultyPages;
+  const filterActivities = () => {
+    let filtered = activities;
+
+    // Search filter
+    if (searchTerm) {
+      filtered = filtered.filter(activity =>
+        activity.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        activity.description.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Status filter
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(activity => activity.status === statusFilter);
+    }
+
+    // Type filter
+    if (typeFilter !== 'all') {
+      filtered = filtered.filter(activity => activity.type === typeFilter);
+    }
+
+    setFilteredActivities(filtered);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+
+    const newActivity: Activity = {
+      id: generateId(),
+      studentId: user.id,
+      studentName: user.name,
+      type: formData.type,
+      title: formData.title,
+      description: formData.description,
+      date: formData.date,
+      fileName: formData.fileName || undefined,
+      status: 'pending',
+      createdAt: new Date().toISOString()
+    };
+
+    const allActivities = getActivities();
+    saveActivities([...allActivities, newActivity]);
+    loadActivities();
+    setShowForm(false);
+    setFormData({
+      type: 'academic',
+      title: '',
+      description: '',
+      date: new Date().toISOString().split('T')[0],
+      fileName: ''
+    });
+  };
+
+  const handleDelete = (activityId: string) => {
+    if (window.confirm('Are you sure you want to delete this activity?')) {
+      const allActivities = getActivities();
+      const updatedActivities = allActivities.filter(activity => activity.id !== activityId);
+      saveActivities(updatedActivities);
+      loadActivities();
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'approved':
+        return <CheckCircle className="h-5 w-5 text-green-600" />;
+      case 'rejected':
+        return <XCircle className="h-5 w-5 text-red-600" />;
+      default:
+        return <Clock className="h-5 w-5 text-orange-600" />;
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'approved':
+        return 'bg-green-100 text-green-800';
+      case 'rejected':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-orange-100 text-orange-800';
+    }
+  };
+
+  const getTypeColor = (type: string) => {
+    switch (type) {
+      case 'academic':
+        return 'badge-academic';
+      case 'extracurricular':
+        return 'badge-extracurricular';
+      default:
+        return 'badge-volunteering';
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'approved':
+        return 'badge-approved';
+      case 'rejected':
+        return 'badge-rejected';
+      default:
+        return 'badge-pending';
+    }
+  };
+
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case 'academic':
+        return BookOpen;
+      case 'extracurricular':
+        return Award;
+      default:
+        return Heart;
+    }
+  };
+
+  if (!user || user.role !== 'student') return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      {/* Mobile sidebar overlay */}
-      {sidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">My Activities</h1>
+          <p className="text-slate-600 mt-1">Track and manage your academic and extracurricular activities</p>
+        </div>
+        <button
+      </div>
+
+      {showForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4">Add New Activity</h3>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Type
+                </label>
+                <select
+                  name="type"
+                  value={formData.type}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="academic">Academic</option>
+                  <option value="extracurricular">Extra-curricular</option>
+                  <option value="volunteering">Volunteering</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Title
+                </label>
+                <input
+                  type="text"
+                  name="title"
+                  value={formData.title}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Description
+                </label>
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  required
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Date
+                </label>
+                <input
+                  type="date"
+                  name="date"
+                  value={formData.date}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  File Name (optional)
+                </label>
+                <input
+                  type="text"
+                  name="fileName"
+                  value={formData.fileName}
+                  onChange={handleChange}
+                  placeholder="e.g., certificate.pdf"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div className="flex space-x-3">
+                <button
+                  type="submit"
+                  className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
+                >
+                  Add Activity
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowForm(false)}
+                  className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
 
-      {/* Top Navigation */}
-      <nav className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200 shadow-sm">
-        <div className="px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <button
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="lg:hidden p-2 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors"
-              >
-                {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-              </button>
-              <GraduationCap className="h-8 w-8 text-blue-600 ml-2 lg:ml-0" />
-              <h1 className="ml-3 text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
-                Student Activity Platform
-              </h1>
-            </div>
-            <div className="flex items-center space-x-3">
-              <div className="hidden sm:block text-right">
-                <p className="text-sm font-medium text-slate-900">{user?.name}</p>
-                <p className="text-xs text-slate-500 capitalize">{user?.role}</p>
-              </div>
-              <div className="h-8 w-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                {user?.name.charAt(0).toUpperCase()}
-              </div>
-              <button
-                onClick={logout}
-                className="flex items-center text-slate-600 hover:text-slate-900 p-2 rounded-lg hover:bg-slate-100 transition-all duration-200"
-                title="Logout"
-              >
-                <LogOut className="h-4 w-4" />
-                <span className="ml-1 hidden sm:inline">Logout</span>
-              </button>
-            </div>
+      <div className="space-y-4">
+        {activities.length === 0 ? (
+          <div className="text-center py-12">
+            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900">No activities yet</h3>
+            <p className="text-gray-600">Add your first activity to get started!</p>
           </div>
-        </div>
-      </nav>
-
-      <div className="flex">
-        {/* Sidebar */}
-        <aside className={`
-          fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 transform transition-transform duration-300 ease-in-out lg:translate-x-0
-          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-        `}>
-          <div className="flex flex-col h-full">
-            {/* Sidebar Header */}
-            <div className="p-6 border-b border-slate-100">
-              <div className="flex items-center">
-                <div className="h-10 w-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-white font-bold">
-                  {user?.name.charAt(0).toUpperCase()}
+        ) : (
+          activities.map((activity) => (
+            <div key={activity.id} className="bg-white rounded-lg shadow p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex-1">
+                  <div className="flex items-center mb-2">
+                    <h3 className="text-lg font-semibold text-gray-900 mr-3">
+                      {activity.title}
+                    </h3>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(activity.type)}`}>
+                      {activity.type}
+                    </span>
+                  </div>
+                  <p className="text-gray-600 mb-3">{activity.description}</p>
+                  <div className="flex items-center text-sm text-gray-500">
+                    <Calendar className="h-4 w-4 mr-1" />
+                    {new Date(activity.date).toLocaleDateString()}
+                    {activity.fileName && (
+                      <>
+                        <FileText className="h-4 w-4 ml-4 mr-1" />
+                        {activity.fileName}
+                      </>
+                    )}
+                  </div>
                 </div>
-                <div className="ml-3">
-                  <p className="font-semibold text-slate-900">{user?.name}</p>
-                  <p className="text-sm text-slate-500 capitalize">{user?.role}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Navigation */}
-            <nav className="flex-1 py-6">
-              <div className="space-y-1">
-                {pages.map((page) => {
-                  const Icon = page.icon;
-                  return (
-                    <button
-                      key={page.id}
-                      onClick={() => {
-                        onPageChange(page.id);
-                        setSidebarOpen(false);
-                      }}
-                      className={`
-                        w-full flex items-center px-6 py-3 text-sm font-medium transition-all duration-200
-                        ${currentPage === page.id
-                          ? 'bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 border-r-4 border-blue-600'
-                          : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                        }
-                      `}
-                    >
-                      <Icon className="h-5 w-5 mr-3" />
-                      {page.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </nav>
-
-            {/* Sidebar Footer */}
-            <div className="p-6 border-t border-slate-100">
-              <div className="text-xs text-slate-500 text-center">
-                <p>Student Activity Platform</p>
-                <p className="mt-1">v2.0.0</p>
-              </div>
-            </div>
-          </div>
-        </aside>
-
-        {/* Main Content */}
-        <main className="flex-1 min-h-screen">
-          <div className="p-4 sm:p-6 lg:p-8">
-            <div className="max-w-7xl mx-auto">
-              <div className="animate-fade-in">
-                {children}
-              </div>
-            </div>
-          </div>
-        </main>
-      </div>
-    </div>
-  );
-};
-
-export default Layout;
-              </span>
-              <button
-                onClick={logout}
-                className="flex items-center text-gray-600 hover:text-gray-900"
-              >
-                <LogOut className="h-4 w-4 mr-1" />
-                Logout
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      <div className="flex">
-        <aside className="w-64 bg-white shadow-sm min-h-screen">
-          <nav className="mt-8">
-            <div className="px-4">
-              {pages.map((page) => {
-                const Icon = page.icon;
-                return (
+                <div className="flex items-center space-x-2 ml-4">
+                  {getStatusIcon(activity.status)}
+                  <span className={`ml-2 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(activity.status)}`}>
+                    {activity.status}
+                  </span>
                   <button
-                    key={page.id}
-                    onClick={() => onPageChange(page.id)}
-                    className={`w-full flex items-center px-4 py-2 mt-2 text-sm font-medium rounded-md ${
-                      currentPage === page.id
-                        ? "bg-blue-100 text-blue-900"
-                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                    }`}
+                    onClick={() => handleDelete(activity.id)}
+                    className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
+                    title="Delete activity"
                   >
-                    <Icon className="h-5 w-5 mr-3" />
-                    {page.label}
+                    <Trash2 className="h-4 w-4" />
                   </button>
-                );
-              })}
+                </div>
+              </div>
+              {activity.feedback && (
+                <div className="mt-4 p-3 bg-gray-50 rounded-md">
+                  <p className="text-sm text-gray-700">
+                    <strong>Feedback:</strong> {activity.feedback}
+                  </p>
+                  {activity.reviewedBy && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Reviewed by {activity.reviewedBy} on {new Date(activity.reviewedAt!).toLocaleDateString()}
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
-          </nav>
-        </aside>
-
-        <main className="flex-1 p-8">{children}</main>
+          ))
+        )}
       </div>
     </div>
   );
 };
 
-export default Layout;
+export default ActivityManager;

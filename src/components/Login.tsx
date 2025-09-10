@@ -10,6 +10,7 @@ interface LoginProps {
 const Login: React.FC<LoginProps> = ({ onToggleMode, isRegisterMode }) => {
   const { login, register } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -284,11 +285,62 @@ const Login: React.FC<LoginProps> = ({ onToggleMode, isRegisterMode }) => {
         </div>
 
         {/* Footer */}
+        {/* Logo and Header */}
         <div className="text-center mb-8">
           <p className="text-xs text-slate-500 mt-8">
             © 2024 Student Activity Platform. All rights reserved.
           </p>
         </div>
+        {/* Demo Credentials Card */}
+        <div className="card mb-6 animate-slide-in">
+          <div className="p-4">
+            <h3 className="font-semibold text-blue-900 mb-3 flex items-center">
+              <User className="h-4 w-4 mr-2" />
+              Demo Accounts
+            </h3>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between items-center p-2 bg-blue-50 rounded-lg">
+                <span className="font-medium text-blue-800">Student:</span>
+                <code className="text-blue-700 text-xs">arjun.sharma@college.edu</code>
+              </div>
+              <div className="flex justify-between items-center p-2 bg-purple-50 rounded-lg">
+                <span className="font-medium text-purple-800">Faculty:</span>
+                <code className="text-purple-700 text-xs">dr.rajesh@college.edu</code>
+              </div>
+              <p className="text-xs text-slate-500 text-center mt-2">Password: password123</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Login Form */}
+        <div className="card animate-slide-in">
+          <div className="p-8">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                  className="input-field"
+                  placeholder="your-email@university.edu"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Calendar, FileText, Tag, Clock, CheckCircle, XCircle, Trash2 } from 'lucide-react';
+import { Plus, Calendar, FileText, Tag, Clock, CheckCircle, XCircle, Trash2, BookOpen, Award, Heart, Filter, Search } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { Activity } from '../types';
 import { getActivities, saveActivities, generateId } from '../utils/storage';
@@ -7,6 +7,10 @@ import { getActivities, saveActivities, generateId } from '../utils/storage';
 const ActivityManager: React.FC = () => {
   const { user } = useAuth();
   const [activities, setActivities] = useState<Activity[]>([]);
+  const [filteredActivities, setFilteredActivities] = useState<Activity[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
     type: 'academic' as 'academic' | 'extracurricular' | 'volunteering',
@@ -20,10 +24,38 @@ const ActivityManager: React.FC = () => {
     loadActivities();
   }, [user]);
 
+  useEffect(() => {
+    filterActivities();
+  }, [activities, searchTerm, statusFilter, typeFilter]);
+
   const loadActivities = () => {
     const allActivities = getActivities();
     const userActivities = allActivities.filter(activity => activity.studentId === user?.id);
     setActivities(userActivities);
+  };
+
+  const filterActivities = () => {
+    let filtered = activities;
+
+    // Search filter
+    if (searchTerm) {
+      filtered = filtered.filter(activity =>
+        activity.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        activity.description.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Status filter
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(activity => activity.status === statusFilter);
+    }
+
+    // Type filter
+    if (typeFilter !== 'all') {
+      filtered = filtered.filter(activity => activity.type === typeFilter);
+    }
+
+    setFilteredActivities(filtered);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -94,43 +126,111 @@ const ActivityManager: React.FC = () => {
   const getTypeColor = (type: string) => {
     switch (type) {
       case 'academic':
-        return 'bg-blue-100 text-blue-800';
+        return 'badge-academic';
       case 'extracurricular':
-        return 'bg-purple-100 text-purple-800';
+        return 'badge-extracurricular';
       default:
-        return 'bg-green-100 text-green-800';
+        return 'badge-volunteering';
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'approved':
+        return 'badge-approved';
+      case 'rejected':
+        return 'badge-rejected';
+      default:
+        return 'badge-pending';
+    }
+  };
+
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case 'academic':
+        return BookOpen;
+      case 'extracurricular':
+        return Award;
+      default:
+        return Heart;
     }
   };
 
   if (!user || user.role !== 'student') return null;
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">My Activities</h2>
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">My Activities</h1>
+          <p className="text-slate-600 mt-1">Track and manage your academic and extracurricular activities</p>
+        </div>
         <button
           onClick={() => setShowForm(true)}
-          className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          className="btn-primary flex items-center"
         >
           <Plus className="h-4 w-4 mr-2" />
-          Add Activity
+          Add New Activity
         </button>
       </div>
 
+      {/* Filters */}
+      <div className="card">
+        <div className="card-content">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
+              <input
+                type="text"
+                placeholder="Search activities..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="input-field pl-10"
+              />
+            </div>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="input-field"
+            >
+              <option value="all">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+            </select>
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+              className="input-field"
+            >
+              <option value="all">All Types</option>
+              <option value="academic">Academic</option>
+              <option value="extracurricular">Extra-curricular</option>
+              <option value="volunteering">Volunteering</option>
+            </select>
+            <div className="flex items-center text-sm text-slate-600">
+              <Filter className="h-4 w-4 mr-2" />
+              {filteredActivities.length} of {activities.length} activities
+            </div>
+          </div>
+        </div>
+      </div>
+
       {showForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4">Add New Activity</h3>
-            <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-lg animate-slide-in">
+            <h3 className="text-2xl font-bold text-slate-900 mb-6">Add New Activity</h3>
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
                   Type
                 </label>
                 <select
                   name="type"
                   value={formData.type}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="input-field"
                 >
                   <option value="academic">Academic</option>
                   <option value="extracurricular">Extra-curricular</option>
@@ -139,7 +239,7 @@ const ActivityManager: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
                   Title
                 </label>
                 <input
@@ -148,12 +248,12 @@ const ActivityManager: React.FC = () => {
                   value={formData.title}
                   onChange={handleChange}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="input-field"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
                   Description
                 </label>
                 <textarea
@@ -162,12 +262,12 @@ const ActivityManager: React.FC = () => {
                   onChange={handleChange}
                   required
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="input-field resize-none"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
                   Date
                 </label>
                 <input
@@ -176,12 +276,12 @@ const ActivityManager: React.FC = () => {
                   value={formData.date}
                   onChange={handleChange}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="input-field"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
                   File Name (optional)
                 </label>
                 <input
@@ -190,21 +290,21 @@ const ActivityManager: React.FC = () => {
                   value={formData.fileName}
                   onChange={handleChange}
                   placeholder="e.g., certificate.pdf"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="input-field"
                 />
               </div>
 
-              <div className="flex space-x-3">
+              <div className="flex space-x-3 pt-4">
                 <button
                   type="submit"
-                  className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
+                  className="flex-1 btn-primary"
                 >
                   Add Activity
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowForm(false)}
-                  className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400"
+                  className="flex-1 btn-secondary"
                 >
                   Cancel
                 </button>
@@ -214,66 +314,93 @@ const ActivityManager: React.FC = () => {
         </div>
       )}
 
-      <div className="space-y-4">
-        {activities.length === 0 ? (
-          <div className="text-center py-12">
-            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900">No activities yet</h3>
-            <p className="text-gray-600">Add your first activity to get started!</p>
+      {/* Activities List */}
+      <div className="space-y-6">
+        {filteredActivities.length === 0 ? (
+          <div className="card">
+            <div className="card-content text-center py-12">
+              <FileText className="h-16 w-16 text-slate-400 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-slate-900 mb-2">
+                {activities.length === 0 ? 'No activities yet' : 'No activities match your filters'}
+              </h3>
+              <p className="text-slate-600 mb-6">
+                {activities.length === 0 
+                  ? 'Add your first activity to get started!' 
+                  : 'Try adjusting your search or filter criteria'}
+              </p>
+              {activities.length === 0 && (
+                <button
+                  onClick={() => setShowForm(true)}
+                  className="btn-primary"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Your First Activity
+                </button>
+              )}
+            </div>
           </div>
         ) : (
-          activities.map((activity) => (
-            <div key={activity.id} className="bg-white rounded-lg shadow p-6">
-              <div className="flex items-start justify-between mb-4">
+          filteredActivities.map((activity) => {
+            const ActivityIcon = getActivityIcon(activity.type);
+            return (
+              <div key={activity.id} className="card hover:shadow-lg transition-all duration-300 animate-slide-in">
+                <div className="card-content">
+                  <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
-                  <div className="flex items-center mb-2">
-                    <h3 className="text-lg font-semibold text-gray-900 mr-3">
+                      <div className="flex items-center mb-3">
+                        <div className="p-2 bg-slate-100 rounded-lg mr-3">
+                          <ActivityIcon className="h-5 w-5 text-slate-600" />
+                        </div>
+                        <h3 className="text-xl font-semibold text-slate-900 mr-3">
                       {activity.title}
                     </h3>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(activity.type)}`}>
+                        <span className={`${getTypeColor(activity.type)}`}>
                       {activity.type}
                     </span>
                   </div>
-                  <p className="text-gray-600 mb-3">{activity.description}</p>
-                  <div className="flex items-center text-sm text-gray-500">
+                      <p className="text-slate-600 mb-4 leading-relaxed">{activity.description}</p>
+                      <div className="flex items-center text-sm text-slate-500 space-x-4">
                     <Calendar className="h-4 w-4 mr-1" />
-                    {new Date(activity.date).toLocaleDateString()}
+                        <span>{new Date(activity.date).toLocaleDateString()}</span>
                     {activity.fileName && (
                       <>
                         <FileText className="h-4 w-4 ml-4 mr-1" />
-                        {activity.fileName}
+                            <span>{activity.fileName}</span>
                       </>
                     )}
                   </div>
                 </div>
-                <div className="flex items-center space-x-2 ml-4">
+                    <div className="flex items-center space-x-3 ml-4">
                   {getStatusIcon(activity.status)}
-                  <span className={`ml-2 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(activity.status)}`}>
+                      <span className={`${getStatusColor(activity.status)}`}>
                     {activity.status}
                   </span>
                   <button
                     onClick={() => handleDelete(activity.id)}
-                    className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
+                        className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
                     title="Delete activity"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
               </div>
+                  
               {activity.feedback && (
-                <div className="mt-4 p-3 bg-gray-50 rounded-md">
-                  <p className="text-sm text-gray-700">
-                    <strong>Feedback:</strong> {activity.feedback}
+                    <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg border border-blue-200">
+                      <p className="text-sm text-blue-800 font-medium mb-1">Faculty Feedback:</p>
+                      <p className="text-blue-700">{activity.feedback}</p>
                   </p>
                   {activity.reviewedBy && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      Reviewed by {activity.reviewedBy} on {new Date(activity.reviewedAt!).toLocaleDateString()}
+                        <p className="text-xs text-blue-600 mt-2">
+                          Reviewed by {activity.reviewedBy} on {new Date(activity.reviewedAt!).toLocaleDateString()}
                     </p>
                   )}
                 </div>
               )}
+                </div>
             </div>
-          ))
+            );
+          })
         )}
       </div>
     </div>
