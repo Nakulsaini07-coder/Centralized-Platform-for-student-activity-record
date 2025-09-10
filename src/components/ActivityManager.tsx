@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Calendar, FileText, Tag, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { Plus, Calendar, FileText, Tag, Clock, CheckCircle, XCircle, Trash2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { Activity } from '../types';
 import { getActivities, saveActivities, generateId } from '../utils/storage';
@@ -54,6 +54,15 @@ const ActivityManager: React.FC = () => {
       date: new Date().toISOString().split('T')[0],
       fileName: ''
     });
+  };
+
+  const handleDelete = (activityId: string) => {
+    if (window.confirm('Are you sure you want to delete this activity?')) {
+      const allActivities = getActivities();
+      const updatedActivities = allActivities.filter(activity => activity.id !== activityId);
+      saveActivities(updatedActivities);
+      loadActivities();
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -237,11 +246,18 @@ const ActivityManager: React.FC = () => {
                     )}
                   </div>
                 </div>
-                <div className="flex items-center ml-4">
+                <div className="flex items-center space-x-2 ml-4">
                   {getStatusIcon(activity.status)}
                   <span className={`ml-2 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(activity.status)}`}>
                     {activity.status}
                   </span>
+                  <button
+                    onClick={() => handleDelete(activity.id)}
+                    className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
+                    title="Delete activity"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 </div>
               </div>
               {activity.feedback && (

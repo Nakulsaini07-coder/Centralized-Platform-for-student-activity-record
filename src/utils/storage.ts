@@ -8,38 +8,38 @@ const CURRENT_USER_KEY = 'sap_current_user';
 const seedUsers: User[] = [
   {
     id: '1',
-    email: 'student1@university.edu',
+    email: 'arjun.sharma@university.edu',
     password: 'password123',
     role: 'student',
-    name: 'Alice Johnson',
+    name: 'Arjun Sharma',
     course: 'Computer Science',
     branch: 'Software Engineering',
     year: 3
   },
   {
     id: '2',
-    email: 'student2@university.edu',
+    email: 'priya.patel@university.edu',
     password: 'password123',
     role: 'student',
-    name: 'Bob Smith',
+    name: 'Priya Patel',
     course: 'Electrical Engineering',
     branch: 'Electronics',
     year: 2
   },
   {
     id: '3',
-    email: 'faculty1@university.edu',
+    email: 'dr.rajesh@university.edu',
     password: 'password123',
     role: 'faculty',
-    name: 'Dr. Sarah Wilson',
+    name: 'Dr. Rajesh Kumar',
     department: 'Computer Science'
   },
   {
     id: '4',
-    email: 'faculty2@university.edu',
+    email: 'prof.sunita@university.edu',
     password: 'password123',
     role: 'faculty',
-    name: 'Prof. Michael Brown',
+    name: 'Prof. Sunita Singh',
     department: 'Electrical Engineering'
   }
 ];
@@ -48,21 +48,21 @@ const seedActivities: Activity[] = [
   {
     id: '1',
     studentId: '1',
-    studentName: 'Alice Johnson',
+    studentName: 'Arjun Sharma',
     type: 'academic',
     title: 'Research Paper on Machine Learning',
     description: 'Published research paper on deep learning algorithms in IEEE conference',
     date: '2024-01-15',
     status: 'approved',
     feedback: 'Excellent research work with significant contributions',
-    reviewedBy: 'Dr. Sarah Wilson',
+    reviewedBy: 'Dr. Rajesh Kumar',
     reviewedAt: '2024-01-20',
     createdAt: '2024-01-15'
   },
   {
     id: '2',
     studentId: '1',
-    studentName: 'Alice Johnson',
+    studentName: 'Arjun Sharma',
     type: 'extracurricular',
     title: 'Hackathon Winner',
     description: 'Won first place in university-wide hackathon with innovative mobile app',
@@ -73,14 +73,14 @@ const seedActivities: Activity[] = [
   {
     id: '3',
     studentId: '2',
-    studentName: 'Bob Smith',
+    studentName: 'Priya Patel',
     type: 'volunteering',
     title: 'Community Tech Support',
     description: 'Volunteered to provide tech support for elderly community members',
     date: '2024-01-25',
     status: 'approved',
     feedback: 'Great community service initiative',
-    reviewedBy: 'Prof. Michael Brown',
+    reviewedBy: 'Prof. Sunita Singh',
     reviewedAt: '2024-01-30',
     createdAt: '2024-01-25'
   }
