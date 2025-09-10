@@ -84,8 +84,8 @@ const Login: React.FC<LoginProps> = ({ onToggleMode, isRegisterMode }) => {
         <div className="mb-6 p-4 bg-blue-50 rounded-lg">
           <h3 className="font-medium text-blue-900 mb-2">Demo Accounts:</h3>
           <div className="text-sm text-blue-800 space-y-1">
-            <div><strong>Student:</strong> arjun.sharma@university.edu / password123</div>
-            <div><strong>Faculty:</strong> dr.rajesh@university.edu / password123</div>
+            <div><strong>Student:</strong> arjun.sharma@college.edu / password123</div>
+            <div><strong>Faculty:</strong> dr.rajesh@college.edu / password123</div>
           </div>
         </div>
 
