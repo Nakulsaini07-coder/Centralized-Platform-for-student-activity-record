@@ -1,21 +1,23 @@
-import React, { useState } from 'react';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import Login from './components/Login';
-import Layout from './components/Layout';
-import StudentProfile from './components/StudentProfile';
-import ActivityManager from './components/ActivityManager';
-import FacultyApprovals from './components/FacultyApprovals';
-import Portfolio from './components/Portfolio';
-import Dashboard from './components/Dashboard';
+import React, { useState } from "react";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import Login from "./components/Login";
+import Layout from "./components/Layout";
+import StudentProfile from "./components/StudentProfile";
+import ActivityManager from "./components/ActivityManager";
+import FacultyApprovals from "./components/FacultyApprovals";
+import Portfolio from "./components/Portfolio";
+import Dashboard from "./components/Dashboard";
+import Analytics from "./components/Analytics";
+import IntegrationSupport from "./components/IntegrationSupport";
 
 const AppContent: React.FC = () => {
   const { user } = useAuth();
-  const [currentPage, setCurrentPage] = useState('dashboard');
+  const [currentPage, setCurrentPage] = useState("dashboard");
   const [isRegisterMode, setIsRegisterMode] = useState(false);
 
   if (!user) {
     return (
-      <Login 
+      <Login
         onToggleMode={() => setIsRegisterMode(!isRegisterMode)}
         isRegisterMode={isRegisterMode}
       />
@@ -24,15 +26,19 @@ const AppContent: React.FC = () => {
 
   const renderPage = () => {
     switch (currentPage) {
-      case 'profile':
+      case "profile":
         return <StudentProfile />;
-      case 'activities':
+      case "activities":
         return <ActivityManager />;
-      case 'approvals':
+      case "approvals":
         return <FacultyApprovals />;
-      case 'portfolio':
+      case "portfolio":
         return <Portfolio />;
-      case 'dashboard':
+      case "analytics":
+        return <Analytics />;
+      case "integrations":
+        return <IntegrationSupport />;
+      case "dashboard":
       default:
         return <Dashboard />;
     }

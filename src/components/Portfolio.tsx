@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Download, FileText, Calendar, Tag, User } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Calendar, Download, FileText, Tag, User } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { Activity } from '../types';
 import { getActivities } from '../utils/storage';
+import { Activity } from '../types';
+import jsPDF from 'jspdf';
 
 const Portfolio: React.FC = () => {
   const { user } = useAuth();
@@ -48,15 +49,13 @@ ${index + 1}. ${activity.title}
 Generated on: ${new Date().toLocaleDateString()}
     `.trim();
 
-    const blob = new Blob([portfolioContent], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${user.name.replace(/\s+/g, '_')}_Portfolio.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const doc = new jsPDF();
+    doc.setFont('helvetica');
+    doc.setFontSize(12);
+    
+    const splitText = doc.splitTextToSize(portfolioContent, 180);
+    doc.text(splitText, 15, 15);
+    doc.save(`${user.name.replace(/\s+/g, '_')}_Portfolio.pdf`);
   };
 
   const getTypeColor = (type: string) => {
@@ -174,9 +173,7 @@ Generated on: ${new Date().toLocaleDateString()}
                     <div className="flex-1">
                       <div className="flex items-center mb-2">
                         <span className="text-sm font-medium text-gray-500 mr-3">#{index + 1}</span>
-                        <h3 className="text-lg font-semibold text-gray-900 mr-3">
-                          {activity.title}
-                        </h3>
+                        <h3 className="text-lg font-semibold text-gray-900 mr-3">{activity.title}</h3>
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(activity.type)}`}>
                           {activity.type}
                         </span>
@@ -185,12 +182,6 @@ Generated on: ${new Date().toLocaleDateString()}
                       <div className="flex items-center text-sm text-gray-500">
                         <Calendar className="h-4 w-4 mr-1" />
                         {new Date(activity.date).toLocaleDateString()}
-                        {activity.fileName && (
-                          <>
-                            <FileText className="h-4 w-4 ml-4 mr-1" />
-                            {activity.fileName}
-                          </>
-                        )}
                       </div>
                     </div>
                   </div>

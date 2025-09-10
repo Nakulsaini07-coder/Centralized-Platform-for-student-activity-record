@@ -1,6 +1,14 @@
-import React from 'react';
-import { User, BookOpen, Activity, BarChart3, LogOut } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import React from "react";
+import {
+  User,
+  BookOpen,
+  Activity,
+  BarChart3,
+  LogOut,
+  TrendingUp,
+  Settings,
+} from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -8,22 +16,28 @@ interface LayoutProps {
   onPageChange: (page: string) => void;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children, currentPage, onPageChange }) => {
+const Layout: React.FC<LayoutProps> = ({
+  children,
+  currentPage,
+  onPageChange,
+}) => {
   const { user, logout } = useAuth();
 
   const studentPages = [
-    { id: 'profile', label: 'Profile', icon: User },
-    { id: 'activities', label: 'Activities', icon: Activity },
-    { id: 'portfolio', label: 'Portfolio', icon: BookOpen },
-    { id: 'dashboard', label: 'Dashboard', icon: BarChart3 }
+    { id: "profile", label: "Profile", icon: User },
+    { id: "activities", label: "Activities", icon: Activity },
+    { id: "portfolio", label: "Portfolio", icon: BookOpen },
+    { id: "dashboard", label: "Dashboard", icon: BarChart3 },
   ];
 
   const facultyPages = [
-    { id: 'approvals', label: 'Approvals', icon: Activity },
-    { id: 'dashboard', label: 'Dashboard', icon: BarChart3 }
+    { id: "approvals", label: "Approvals", icon: Activity },
+    { id: "dashboard", label: "Dashboard", icon: BarChart3 },
+    { id: "analytics", label: "Analytics", icon: TrendingUp },
+    { id: "integrations", label: "Integrations", icon: Settings },
   ];
 
-  const pages = user?.role === 'student' ? studentPages : facultyPages;
+  const pages = user?.role === "student" ? studentPages : facultyPages;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -64,8 +78,8 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPage, onPageChange }) 
                     onClick={() => onPageChange(page.id)}
                     className={`w-full flex items-center px-4 py-2 mt-2 text-sm font-medium rounded-md ${
                       currentPage === page.id
-                        ? 'bg-blue-100 text-blue-900'
-                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                        ? "bg-blue-100 text-blue-900"
+                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                     }`}
                   >
                     <Icon className="h-5 w-5 mr-3" />
@@ -77,9 +91,7 @@ const Layout: React.FC<LayoutProps> = ({ children, currentPage, onPageChange }) 
           </nav>
         </aside>
 
-        <main className="flex-1 p-8">
-          {children}
-        </main>
+        <main className="flex-1 p-8">{children}</main>
       </div>
     </div>
   );
