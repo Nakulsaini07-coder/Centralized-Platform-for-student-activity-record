@@ -8,7 +8,7 @@ const CURRENT_USER_KEY = 'sap_current_user';
 const seedUsers: User[] = [
   {
     id: '1',
-    email: 'arjun.sharma@university.edu',
+    email: 'arjun.sharma@college.edu',
     password: 'password123',
     role: 'student',
     name: 'Arjun Sharma',
@@ -18,7 +18,7 @@ const seedUsers: User[] = [
   },
   {
     id: '2',
-    email: 'priya.patel@university.edu',
+    email: 'priya.patel@college.edu',
     password: 'password123',
     role: 'student',
     name: 'Priya Patel',
@@ -28,7 +28,7 @@ const seedUsers: User[] = [
   },
   {
     id: '3',
-    email: 'dr.rajesh@university.edu',
+    email: 'dr.rajesh@college.edu',
     password: 'password123',
     role: 'faculty',
     name: 'Dr. Rajesh Kumar',
@@ -36,7 +36,7 @@ const seedUsers: User[] = [
   },
   {
     id: '4',
-    email: 'prof.sunita@university.edu',
+    email: 'prof.sunita@college.edu',
     password: 'password123',
     role: 'faculty',
     name: 'Prof. Sunita Singh',
